@@ -40,3 +40,24 @@ static final function int GetChrCode(string Char)
 
 	return -1;
 }
+
+static final function int HexToInt(string HexDigits)
+{
+	local int i, TextLength, Result, Digit;
+	local string CurrentChar;
+
+	TextLength = Len(HexDigits);
+
+	for(i = 0; i < TextLength; i++)
+	{
+		CurrentChar = Caps(Mid(HexDigits, i, 1));
+		Digit = InStr("0123456789ABCDEF", CurrentChar);
+
+		if(Digit < 0)
+			return -1;
+
+		Result = Result * 16 + Digit;
+	}
+
+	return Result;
+}
