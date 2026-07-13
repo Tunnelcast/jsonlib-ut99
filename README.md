@@ -3,7 +3,7 @@
 A JSON library for UnrealScript on **Unreal Tournament (1999)**, targeting OldUnreal **469**.
 Pure script, no native code: build it, add it to `EditPackages`, and you have JSON.
 
-Port of the [UT2004 JsonLib](https://github.com/Tunnelcast/JsonLib). Same API, same behaviour.
+Port of the [UT2004 JsonLib](https://github.com/Tunnelcast/jsonlib-ut2004). Same API, same behaviour.
 
 ## What you get
 
