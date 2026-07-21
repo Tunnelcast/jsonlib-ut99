@@ -13,6 +13,7 @@ const ValueAssignCharacter = ":";
 const ValueSeparatorCharacter = ",";
 const ArrayOpenCharacter = "[";
 const ArrayCloseCharacter = "]";
+const HexDigits = "0123456789abcdef";
 
 struct KeyValuePair
 {
@@ -190,15 +191,61 @@ function AddString(string Key, string Value)
 	AddValue(Key, Value);
 }
 
+// A json string leaves here as pure ascii. Strings are UTF-16 in memory but only one byte per character
+// survives being written out, so a character above 0x7E would leave as a lone high byte - no longer valid
+// UTF-8, and a strict reader rejects the whole document rather than that one character.
+//
+// One pass, and runs of ordinary characters are copied whole: a value needing no escaping at all is
+// returned as it came in, rather than rebuilt one character at a time.
 function string EscapeCharacters(string Value)
 {
-	// escape backslashes always first, because it's used to escape other characters
-	Value = Repl(Value, EscapeCharacter, EscapeCharacter $ EscapeCharacter, true);
-	Value = Repl(Value, QuotationMarkCharacter, EscapeCharacter $ QuotationMarkCharacter, true);
-	// a raw ESC byte immediately makes the json invalid, if not removed
-	Value = Repl(Value, Chr(27), "", true);
+	local string Result;
+	local int i, TextLength, Code, RunStart;
 
-	return Value;
+	TextLength = Len(Value);
+
+	for(i = 0; i < TextLength; i++)
+	{
+		Code = Asc(Mid(Value, i, 1));
+
+		if(Code >= 32 && Code <= 126 && Code != 34 && Code != 92)
+			continue;
+
+		if(i > RunStart)
+			Result = Result $ Mid(Value, RunStart, i - RunStart);
+
+		Result = Result $ EscapeSequence(Code);
+		RunStart = i + 1;
+	}
+
+	if(RunStart == 0)
+		return Value;
+
+	if(TextLength > RunStart)
+		Result = Result $ Mid(Value, RunStart, TextLength - RunStart);
+
+	return Result;
+}
+
+function string EscapeSequence(int Code)
+{
+	if(Code == 34) return EscapeCharacter $ QuotationMarkCharacter;
+	if(Code == 92) return EscapeCharacter $ EscapeCharacter;
+	if(Code == 8)  return EscapeCharacter $ "b";
+	if(Code == 9)  return EscapeCharacter $ "t";
+	if(Code == 10) return EscapeCharacter $ "n";
+	if(Code == 12) return EscapeCharacter $ "f";
+	if(Code == 13) return EscapeCharacter $ "r";
+
+	return EscapeCharacter $ "u" $ ToHex4(Code);
+}
+
+function string ToHex4(int Code)
+{
+	return Mid(HexDigits, (Code >> 12) & 15, 1)
+		$ Mid(HexDigits, (Code >> 8) & 15, 1)
+		$ Mid(HexDigits, (Code >> 4) & 15, 1)
+		$ Mid(HexDigits, Code & 15, 1);
 }
 
 function AddBool(string Key, bool Value)
