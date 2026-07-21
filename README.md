@@ -33,7 +33,8 @@ default), `RemoveValue`, `Clear`, `ToString`.
 
 `AddString` escapes for you: the value is emitted as a JSON string with `\uXXXX` for
 anything outside printable ASCII, so the serialized document is always pure ASCII and therefore
-always valid UTF-8. Do not pre-filter your text.
+always valid UTF-8. It escapes, it does not filter: nothing is ever removed, and every character you
+pass in comes back out of `Deserialize` as it went in. Do not pre-filter your text.
 
 ## Install
 
